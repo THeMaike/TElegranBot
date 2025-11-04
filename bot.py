@@ -1,66 +1,81 @@
-import difflib
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters
+)
 
-# LISTA DE ITENS
-itens = [
-    "Monitor LG 27 polegadas",
-    "Monitor Samsung 27 144hz",
-    "Monitor AOC 27 144hz",
-    "Teclado Mecânico Redragon Kumara",
-    "Teclado Mecânico HyperX Alloy",
-    "Mouse Gamer Logitech G203",
-    "Mouse Razer Viper Mini",
-    "Placa de Vídeo RTX 4060",
-    "Placa de Vídeo RTX 4070",
-    "Placa de Vídeo RX 9060 XT 8GB",
-    "Placa de Vídeo RX 9060 XT 16GB",
-    "Fonte Corsair 650w",
-    "Fonte EVGA 500w",
-    "SSD Kingston 480GB",
-    "SSD NVMe 1TB Samsung",
+
+# -----------------------------
+# LISTA DE ITENS PARA PESQUISA
+# -----------------------------
+ITEMS = [
+    "RX 9060 XT 8GB",
+    "RX 9060 XT 16GB",
+    "RX 7600",
+    "RTX 4060",
+    "RTX 4070",
+    "GTX 1650",
+    "RX 580",
+    "RTX 4080 SUPER",
 ]
 
-def start(update, context):
-    update.message.reply_text("Olá! Envie o nome do item que deseja pesquisar 🔎")
 
-def pesquisar(query):
-    query_lower = query.lower()
+# -----------------------------
+# /start
+# -----------------------------
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "✅ Oi! Sou seu bot de pesquisa de hardware.\n"
+        "Digite o nome de uma placa que eu te mostro itens parecidos.\n\n"
+        "Exemplo: *4060* ou *RX 580*"
+    )
 
-    # 1️⃣ Busca EXATA
-    exatos = [item for item in itens if item.lower() == query_lower]
-    if exatos:
-        return "✅ Resultado exato encontrado:\n" + "\n".join(f"- {item}" for item in exatos)
 
-    # 2️⃣ Busca PARCIAL
-    parciais = [item for item in itens if query_lower in item.lower()]
-    if parciais:
-        return "🔎 Resultados encontrados (parcial):\n" + "\n".join(f"- {item}" for item in parciais)
+# -----------------------------
+# Função de pesquisa
+# -----------------------------
+def search_items(query: str):
+    query = query.lower()
+    results = [item for item in ITEMS if query in item.lower()]
+    return results
 
-    # 3️⃣ Busca SIMILAR
-    parecidos = difflib.get_close_matches(query, itens, n=5, cutoff=0.2)
-    if parecidos:
-        return "🤏 Talvez você quis dizer:\n" + "\n".join(f"- {item}" for item in parecidos)
 
-    return "❌ Nenhum item parecido foi encontrado."
+# -----------------------------
+# Mensagem comum — pesquisa
+# -----------------------------
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
 
-def mensagem(update, context):
-    texto = update.message.text
-    resposta = pesquisar(texto)
-    update.message.reply_text(resposta)
+    results = search_items(text)
 
+    if not results:
+        await update.message.reply_text("❌ Nenhum item encontrado.")
+        return
+
+    reply = "🔍 Resultados encontrados:\n\n"
+    for r in results:
+        reply += f"✅ {r}\n"
+
+    await update.message.reply_text(reply)
+
+
+# -----------------------------
+# MAIN
+# -----------------------------
 def main():
-    import os
-    TOKEN = os.getenv("TOKEN")
+    token = "8274650004:AAGMJGFwwx3q2Z_fLh5tFWC9NPCWpzsuD_0"
 
+    app = ApplicationBuilder().token(token).build()
 
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.text, mensagem))
+    print("✅ Bot iniciado...")
+    app.run_polling()
 
-    updater.start_polling()
-    updater.idle()
 
 if __name__ == "__main__":
     main()
