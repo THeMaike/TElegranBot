@@ -7,6 +7,8 @@ from telegram.ext import (
     filters
 )
 
+TOKEN = "8274650004:AAGMJGFwwx3q2Z_fLh5tFWC9NPCWpzsuD_0"   # coloque seu token aqui
+
 
 # -----------------------------
 # LISTA DE ITENS PARA PESQUISA
@@ -23,9 +25,7 @@ ITEMS = [
 ]
 
 
-# -----------------------------
 # /start
-# -----------------------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "✅ Oi! Sou seu bot de pesquisa de hardware.\n"
@@ -34,18 +34,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-# -----------------------------
-# Função de pesquisa
-# -----------------------------
+# função de pesquisa
 def search_items(query: str):
     query = query.lower()
-    results = [item for item in ITEMS if query in item.lower()]
-    return results
+    return [item for item in ITEMS if query in item.lower()]
 
 
-# -----------------------------
-# Mensagem comum — pesquisa
-# -----------------------------
+# mensagem comum → pesquisa
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -56,19 +51,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     reply = "🔍 Resultados encontrados:\n\n"
-    for r in results:
-        reply += f"✅ {r}\n"
+    reply += "\n".join(f"✅ {r}" for r in results)
 
     await update.message.reply_text(reply)
 
 
-# -----------------------------
-# MAIN
-# -----------------------------
+# MAIN — versão PTB moderna
 def main():
-    token = "8274650004:AAGMJGFwwx3q2Z_fLh5tFWC9NPCWpzsuD_0"
-
-    app = ApplicationBuilder().token(token).build()
+    app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
