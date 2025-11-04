@@ -1,6 +1,5 @@
 import difflib
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-import os
 
 # LISTA DE ITENS
 itens = [
@@ -50,7 +49,9 @@ def mensagem(update, context):
     update.message.reply_text(resposta)
 
 def main():
-    TOKEN = os.getenv("TOKEN")  # Pega o token do ambiente
+    import os
+    TOKEN = os.getenv("TOKEN")
+
 
     updater = Updater(TOKEN, use_context=True)
     dp = updater.dispatcher
